@@ -103,3 +103,73 @@ trash_wheel_tidy %>%
   sum()
 ```
 
+### Problem3
+
+```{r}
+pols_month <- 
+  read_csv('data/pols-month.csv') %>%
+  janitor::clean_names() %>%
+  separate(mon, sep = '-', into = c('year','month','day')) %>%
+  mutate(month = recode(month, 
+  '01' = 'Jan', 
+  '02' = 'Feb', 
+  '03' = 'Mar', 
+  '04' = 'Apr', 
+  '05' = 'May',
+  '06' = 'Jun',
+  '07' = 'Jul',
+  '08' = 'Aug',
+  '09' = 'Sep',
+  '10' = 'Oct',
+  '11' = 'Nov',
+  '12' = 'Dec')) %>%
+  mutate(president = ifelse(prez_dem == 1, 'dem', 'gop')) %>%
+  mutate(year = as.numeric(year)) %>%
+  select(-prez_dem, -prez_gop, -day)
+```
+
+```{r}
+snp <- 
+  read_csv('data/snp.csv') %>%
+  janitor::clean_names() %>%
+  separate(date, sep = '/', into = c('month','day','year')) %>%
+  mutate(month = recode(month, 
+  '1' = 'Jan', 
+  '2' = 'Feb', 
+  '3' = 'Mar', 
+  '4' = 'Apr', 
+  '5' = 'May',
+  '6' = 'Jun',
+  '7' = 'Jul',
+  '8' = 'Aug',
+  '9' = 'Sep',
+  '10' = 'Oct',
+  '11' = 'Nov',
+  '12' = 'Dec')) %>%
+  mutate(year = as.numeric(year)) %>%
+  mutate(
+    year = case_when(
+      year < 40 ~ 2000+year,
+      year > 40 ~ 1900+year)) %>%
+  relocate(year,month) %>%
+  arrange(year) %>%
+  select(-day)
+```
+
+```{r}
+unemployment <- 
+  read_csv('data/unemployment.csv') %>%
+  rename('year' = 'Year') %>%
+  pivot_longer(
+    cols = Jan:Dec,
+    names_to = 'month',
+    values_to = 'unemployment_rate')
+```
+
+```{r}
+tidy_table_p3 <- 
+  pols_month %>%
+  left_join(snp) %>%
+  left_join(unemployment)
+```
+
