@@ -56,3 +56,50 @@ nyc_transit_tidy <-
     values_to = 'route_name')
 ```
 
+```{r}
+nyc_transit_tidy %>%
+  filter(route_name == 'A') %>%
+  select(station_name,line) %>%
+  distinct()
+```
+
+
+### Problem2
+
+```{r}
+mr_trash_wheel <- 
+  read_excel(
+    'data/Trash Wheel Collection Data.xlsx',
+    range = "A2:N549") %>%
+  janitor::clean_names() %>%
+  mutate(sports_balls = as.integer(round(sports_balls, digits = 0))) %>%
+  add_column(trash_wheel = 'Mr')
+```
+
+```{r}
+prof_trash_wheel <-
+  read_excel(
+    'data/Trash Wheel Collection Data.xlsx',
+    sheet = 'Professor Trash Wheel',
+    range = "A2:M96") %>%
+  janitor::clean_names() %>%
+  mutate(year = as.character(year)) %>%
+  add_column(trash_wheel = 'Professor')
+```
+
+```{r}
+trash_wheel_tidy <- full_join(mr_trash_wheel,prof_trash_wheel)
+```
+
+```{r}
+trash_wheel_tidy %>%
+  filter(trash_wheel == "Professor") %>%
+  pull(weight_tons) %>%
+  sum()
+
+trash_wheel_tidy %>%
+  filter(year == '2020', trash_wheel == "Mr") %>%
+  pull(sports_balls) %>%
+  sum()
+```
+
