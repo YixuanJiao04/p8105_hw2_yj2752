@@ -13,7 +13,7 @@ library(readxl)
 
 
 ### Problem1
-First of all, the dataset is loaded by `read_csv()` and given columns are selected, route8 - route11 are converted to character inorder to keep consistent with other routes. Then entry column is coverted to logcial using `ifelse()`
+First of all, the dataset is loaded by `read_csv()` and given columns are selected, route8 - route11 are converted to character in order to keep consistent with other routes. Then entry column is converted to logical using `ifelse()`
 ```{r message = FALSE}
 nyc_transit <-
   read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
@@ -44,7 +44,7 @@ Use `mean()` to calculate the average the proportion. Since entry stores the log
 ```{r}
 mean(filter(nyc_transit,vending == 'NO')$entry)
 ```
-Use `pivot_longer()` to store route and route number in two seperate columns.
+Use `pivot_longer()` to store route and route number in two separate columns.
 ```{r}
 nyc_transit_tidy <-
   nyc_transit %>%
@@ -111,7 +111,7 @@ trash_wheel_tidy %>%
 ```
 
 ### Problem3
-pols-month.csv is loaded and column 'mon' is divided into 3 different variables 'day','month','year' using `seperate()`, the months are converted into string format. then prez_dem and prez_gop are merged into one column president, showing the party of the incubent president.
+pols-month.csv is loaded and column 'mon' is divided into 3 different variables 'day','month','year' using `separate()`, the months are converted into string format. then prez_dem and prez_gop are merged into one column president, showing the party of the incumbent president.
 ```{r message = FALSE}
 pols_month <- 
   read_csv('data/pols-month.csv') %>%
@@ -162,7 +162,7 @@ snp <-
   arrange(year) %>%
   select(-day)
 ```
-The unemployment dataset is loaded and `pivot_longer()` into two columns, storing month and unemployment rate seperatedly. 
+The unemployment dataset is loaded and `pivot_longer()` into two columns, storing month and unemployment rate separatedly. 
 ```{r message = FALSE}
 unemployment <- 
   read_csv('data/unemployment.csv') %>%
@@ -172,7 +172,7 @@ unemployment <-
     names_to = 'month',
     values_to = 'unemployment_rate')
 ```
-The snp is merged into pols_month then unemployment is merged into them by `left_join()` (there is no difference using different kind of join function since pols_month contain all rows the other two have).
+The snp is merged into pols_month then unemployment is merged into them by `left_join()` (there is no difference using different kind of join function since pols_month contains all rows the other two have).
 ```{r message = FALSE}
 tidy_table_p3 <- 
   pols_month %>%
