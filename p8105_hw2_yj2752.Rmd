@@ -2,21 +2,20 @@
 title: "p8105_hw2_yj2752"
 author: Yixuan Jiao
 output: github_document
-date: "2022-10-03"
 ---
 
-###Import Library
+### Import Library
 
-```{r}
+```{r message=FALSE}
 library(tidyverse)
 library(readxl)
 ```
 
 
 ### Problem1
-
-```{r}
-nyc_transit = 
+First of all, the dataset is loaded by `read_csv()` and given columns are selected, route8 - route11 are converted to character inorder to keep consistent with other routes. Then entry column is coverted to logcial using `ifelse()`
+```{r message = FALSE}
+nyc_transit <-
   read_csv("data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
   janitor::clean_names() %>%
   select(
@@ -30,22 +29,22 @@ nyc_transit =
     route11 = as.character(route11)) %>%
   mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
 ```
-
+`distinct()` function is used to find the number of distinct station name. There are 465 disctinct stations in total.
 ```{r}
 select(nyc_transit,station_name,line) %>%
   distinct()
 ```
-
+Use `filter()` to only select the rows which ada is TRUE. There are 84 stations are ADA compliant.
 ```{r}
 filter(nyc_transit,ada == TRUE) %>% 
   select(station_name, line) %>% 
-  distinct
+  distinct()
 ```
-
+Use `mean()` to calculate the average the proportion. Since entry stores the logical value, we can directly calculate the mean from that and that could represent the proportion of entry. 0.37 of entries are not vending allowed.
 ```{r}
 mean(filter(nyc_transit,vending == 'NO')$entry)
 ```
-
+Use `pivot_longer()` to store route and route number in two seperate columns.
 ```{r}
 nyc_transit_tidy <-
   nyc_transit %>%
@@ -55,17 +54,21 @@ nyc_transit_tidy <-
     names_prefix = 'route',
     values_to = 'route_name')
 ```
-
+Use the new tidy dataset to answer the following question. 60 stations serve A train and 17 of them are ADA compliant.
 ```{r}
 nyc_transit_tidy %>%
   filter(route_name == 'A') %>%
   select(station_name,line) %>%
   distinct()
+
+nyc_transit_tidy %>%
+  filter(route_name == 'A', ada == TRUE) %>%
+  select(station_name,line) %>%
+  distinct()
 ```
 
-
 ### Problem2
-
+The Mr Trash Wheel sheet is extracted using `read_excel()` with sepcific range selected, then the number of sports balls is round and converted to integer type. A new column representing the sheet it came from is added. The year column is converted The year column is converted to numeric type in order to keep consistent with the second data set.
 ```{r}
 mr_trash_wheel <- 
   read_excel(
@@ -73,9 +76,10 @@ mr_trash_wheel <-
     range = "A2:N549") %>%
   janitor::clean_names() %>%
   mutate(sports_balls = as.integer(round(sports_balls, digits = 0))) %>%
+  mutate(year = as.numeric(year)) %>%
   add_column(trash_wheel = 'Mr')
 ```
-
+Same procedure for Professor Trash Wheel.
 ```{r}
 prof_trash_wheel <-
   read_excel(
@@ -83,14 +87,17 @@ prof_trash_wheel <-
     sheet = 'Professor Trash Wheel',
     range = "A2:M96") %>%
   janitor::clean_names() %>%
-  mutate(year = as.character(year)) %>%
   add_column(trash_wheel = 'Professor')
 ```
-
-```{r}
+Then these two datasets are joined together by `full_join()`
+```{r message = FALSE}
 trash_wheel_tidy <- full_join(mr_trash_wheel,prof_trash_wheel)
 ```
-
+`skim()` is used to see the summary of the dataset. There are `r nrow(trash_wheel_tidy)` observations and `r ncol(trash_wheel_tidy)` variables in total. Most of the key variable is in numeric type, showing the number/weight of the trash collected in specific date and place. Professor Trash Wheel doesn't have the recored sports balls information while Mr doesn't have record of homes powered. 
+```{r}
+skimr::skim(trash_wheel_tidy)
+```
+Using `filter()` to extract the rows we desire and use `pull()` to pull out the column we need to further look at. Use `sum()` to get the answer.In total 190.12T of trash is collected by Professor and 856 sports balls are collected by Mr Trash Wheel in 2020.
 ```{r}
 trash_wheel_tidy %>%
   filter(trash_wheel == "Professor") %>%
@@ -104,8 +111,8 @@ trash_wheel_tidy %>%
 ```
 
 ### Problem3
-
-```{r}
+pols-month.csv is loaded and column 'mon' is divided into 3 different variables 'day','month','year' using `seperate()`, the months are converted into string format. then prez_dem and prez_gop are merged into one column president, showing the party of the incubent president.
+```{r message = FALSE}
 pols_month <- 
   read_csv('data/pols-month.csv') %>%
   janitor::clean_names() %>%
@@ -127,8 +134,8 @@ pols_month <-
   mutate(year = as.numeric(year)) %>%
   select(-prez_dem, -prez_gop, -day)
 ```
-
-```{r}
+snp is loaded in the similar procedure and key variables (month and year) are adjusted to be in the same format with pols_month dataset. `case_when()` is used when mutating the year column into full year values. `ifelse()` will also work in this scenario. 
+```{r message = FALSE}
 snp <- 
   read_csv('data/snp.csv') %>%
   janitor::clean_names() %>%
@@ -149,14 +156,14 @@ snp <-
   mutate(year = as.numeric(year)) %>%
   mutate(
     year = case_when(
-      year < 40 ~ 2000+year,
-      year > 40 ~ 1900+year)) %>%
+      year < 40 ~ 2000 + year,
+      year > 40 ~ 1900 + year)) %>%
   relocate(year,month) %>%
   arrange(year) %>%
   select(-day)
 ```
-
-```{r}
+The unemployment dataset is loaded and `pivot_longer()` into two columns, storing month and unemployment rate seperatedly. 
+```{r message = FALSE}
 unemployment <- 
   read_csv('data/unemployment.csv') %>%
   rename('year' = 'Year') %>%
@@ -165,11 +172,13 @@ unemployment <-
     names_to = 'month',
     values_to = 'unemployment_rate')
 ```
-
-```{r}
+The snp is merged into pols_month then unemployment is merged into them by `left_join()` (there is no difference using different kind of join function since pols_month contain all rows the other two have).
+```{r message = FALSE}
 tidy_table_p3 <- 
   pols_month %>%
   left_join(snp) %>%
   left_join(unemployment)
-```
 
+head(tidy_table_p3)
+```
+Except date, the first dataset contains information of distribution of president, senator, and representative in different parties. The second dataset contains s&p index, and the third dataset contains the unemployment rate. After merging them into a single dataframe by year and month, there are total `r nrow(tidy_table_p3)` observations, which represent different month over years. And there are `r ncol(tidy_table_p3)` variables including year and month. The year range of observations is from `r min(pull(tidy_table_p3,year))` to `r max(pull(tidy_table_p3,year))`.
